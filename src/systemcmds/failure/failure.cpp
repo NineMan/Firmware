@@ -116,16 +116,18 @@ failure gps off
 
 int inject_failure(uint8_t unit, uint8_t type)
 {
+	const hrt_abstime now = hrt_absolute_time();
+
 	uORB::Subscription command_ack_sub{ORB_ID(vehicle_command_ack)};
 
 	uORB::Publication<vehicle_command_s> command_pub{ORB_ID(vehicle_command)};
 	vehicle_command_s command{};
+	command.timestamp = now;
 	command.command = vehicle_command_s::VEHICLE_CMD_INJECT_FAILURE;
 	command.param1 = static_cast<float>(unit);
 	command.param2 = static_cast<float>(type);
 	command_pub.publish(command);
 
-	const hrt_abstime now = hrt_absolute_time();
 	vehicle_command_ack_s ack;
 	while (hrt_elapsed_time(&now) < 1000000) {
 		if (!command_ack_sub.update(&ack)) {
